@@ -91,7 +91,8 @@ function animate()
 	context.fillStyle = "#99ddff";
 	context.fillRect(0,0,canvas.width, canvas.height);
 
-	//Cast Power
+	// Casting Power
+
 	if(w && !lineCast)
 	{
 		castPower += .4;
@@ -102,7 +103,8 @@ function animate()
 		}
 	}
 
-	//Release Cast
+	// Cast the line!
+
 	if(!w && castPower > 0 && !lineCast)
 	{
 		hook.x = player.x;
@@ -115,7 +117,8 @@ function animate()
 		castPower = 0;
 	}
 
-	//Hook Physics
+	// Hook Physics
+
 	if(lineCast)
 	{
 		hook.vy += gravity;
@@ -129,26 +132,34 @@ function animate()
 		//Water Resistance
 		if(hook.hitTestObject(water))
 		{
-			hook.vx *= .9;
-			hook.vy *= .9;
+			hook.vx *= .90;
+			hook.vy *= .90;
 		}
 	}
 	else
 	{
+		//Hook follows player before cast
 		hook.x = player.x;
 		hook.y = player.y;
 	}
 
-	//Fish Movement + Catching
+	// Fish Movement + Cataching Mechanic
+
 	for(let i = 0; i < fish.length; i++)
 	{
-		fish[i].x += Math.sin(Date.now()/500 + i) * .5;
+		//Fish movement
+		if(!fish[i].caught)
+		{
+			fish[i].x += Math.sin(Date.now()/500 + i) * .5;
+		}
 
-		if(lineCast && hook.hitTestObject(fish[i]))
+		//Catch detection
+		if(lineCast && !fish[i].caught && hook.hitTestObject(fish[i]))
 		{
 			fish[i].caught = true;
 		}
 
+		// Fish follows hook if caught
 		if(fish[i].caught)
 		{
 			fish[i].x = hook.x;
@@ -156,50 +167,81 @@ function animate()
 		}
 	}
 
-	//Reel In
+	// Reel in that fish!
+
 	if(s && lineCast)
 	{
+		//Pull hook upward
 		hook.y -= 5;
 
+		//Pull hook horizontally back to player
+		if(hook.x > player.x)
+		{
+			hook.x -= 3;
+		}
+		else if(hook.x < player.x)
+		{
+			hook.x += 3;
+		}
+
+		//Bring fish with hook
+		for(let i = 0; i < fish.length; i++)
+		{
+			if(fish[i].caught)
+			{
+				fish[i].x = hook.x;
+				fish[i].y = hook.y - 20;
+			}
+		}
+
+		//Hook returns to player
 		if(hook.y <= player.y + 20)
 		{
 			lineCast = false;
+
 			hook.vx = 0;
 			hook.vy = 0;
+
+			//Successful fish catch
+			for(let i = 0; i < fish.length; i++)
+			{
+				if(fish[i].caught)
+				{
+					fish[i].y = 10000;
+				}
+			}
 		}
 	}
 
-	//Reset Hook
-	if(hook.y > canvas.height + 100)
-	{
-		lineCast = false;
-		hook.vx = 0;
-		hook.vy = 0;
-	}
+	// Draw the Water
 
-	//Draw Water
 	water.drawRect();
 
-	//Draw Fish
+	// Draw the Fish
+
 	for(let i = 0; i < fish.length; i++)
 	{
-		if(!fish[i].caught)
+		if(fish[i].y < 9999)
 		{
 			fish[i].drawRect();
 		}
 	}
 
-	//Fishing Line
+	// Fishing Line
+
 	player.drawLine(hook);
 
-	//Draw Objects
+	// Draw Objects
+
 	player.drawRect();
 	hook.drawCircle();
 
-	//UI
+	// UI
+
 	context.fillStyle = "black";
 	context.font = "20px Arial";
+
 	context.fillText("Hold W To Cast", 20, 30);
-	context.fillText("Press S To Reel In", 20, 60);
+	context.fillText("Hold S To Reel In", 20, 60);
 	context.fillText("Power: " + Math.round(castPower), 20, 90);
 }
