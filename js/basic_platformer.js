@@ -167,51 +167,66 @@ function animate()
 		}
 	}
 
-	// Reel in that fish!
+		// Reel in that fish!
 
-	if(s && lineCast)
-	{
-		//Pull hook upward
-		hook.y -= 5;
-
-		//Pull hook horizontally back to player
-		if(hook.x > player.x)
-		{
-			hook.x -= 3;
-		}
-		else if(hook.x < player.x)
-		{
-			hook.x += 3;
-		}
-
-		//Bring fish with hook
-		for(let i = 0; i < fish.length; i++)
-		{
-			if(fish[i].caught)
+			if(s && lineCast)
 			{
-				fish[i].x = hook.x;
-				fish[i].y = hook.y - 20;
-			}
-		}
+				//Direction back to player
 
-		//Hook returns to player
-		if(hook.y <= player.y + 20)
-		{
-			lineCast = false;
+				var dx = player.x - hook.x;
+				var dy = player.y - hook.y;
 
-			hook.vx = 0;
-			hook.vy = 0;
+				//Distance to player
+				var distance = Math.sqrt(dx * dx + dy * dy);
 
-			//Successful fish catch
-			for(let i = 0; i < fish.length; i++)
-			{
-				if(fish[i].caught)
+				//Normalize direction
+				if(distance > 0)
 				{
-					fish[i].y = 10000;
+					dx /= distance;
+					dy /= distance;
+				}
+
+				//Reel speed
+				var reelSpeed = 8;
+
+				hook.x += dx * reelSpeed;
+				hook.y += dy * reelSpeed;
+
+				//Stop physics while reeling
+				hook.vx = 0;
+				hook.vy = 0;
+
+				//Bring fish with hook
+				for(let i = 0; i < fish.length; i++)
+				{
+					if(fish[i].caught)
+					{
+						fish[i].x = hook.x;
+						fish[i].y = hook.y - 20;
+					}
+				}
+
+				//Hook returns to player
+				if(distance < 15)
+				{
+					lineCast = false;
+
+					hook.x = player.x;
+					hook.y = player.y;
+
+					hook.vx = 0;
+					hook.vy = 0;
+
+					//Successful fish catch
+					for(let i = 0; i < fish.length; i++)
+					{
+						if(fish[i].caught)
+						{
+							fish[i].y = 10000;
+						}
+					}
 				}
 			}
-		}
-	}
 
 	// Draw the Water
 
@@ -244,4 +259,51 @@ function animate()
 	context.fillText("Hold W To Cast", 20, 30);
 	context.fillText("Hold S To Reel In", 20, 60);
 	context.fillText("Power: " + Math.round(castPower), 20, 90);
+
+	// Power Bar
+
+	var barX = 20;
+	var barY = 110;
+	var barWidth = 220;
+	var barHeight = 20;
+
+	// Power Bar Background
+
+	context.fillStyle = "#444444";
+	context.fillRect(barX, barY, barWidth, barHeight);
+
+	// Power Fill
+
+	var fillWidth = (castPower / 20) * barWidth;
+
+	context.fillStyle = "#ffff66";
+	context.fillRect(barX, barY, fillWidth, barHeight);
+
+	// Left Marker (Bad Cast)
+
+	context.strokeStyle = "red";
+	context.lineWidth = 3;
+
+	context.beginPath();
+	context.moveTo(barX + 30, barY);
+	context.lineTo(barX + 30, barY + barHeight);
+	context.stroke();
+
+	// Middle Marker (Best Cast)
+
+	context.strokeStyle = "lime";
+
+	context.beginPath();
+	context.moveTo(barX + (barWidth / 2), barY);
+	context.lineTo(barX + (barWidth / 2), barY + barHeight);
+	context.stroke();
+
+	// Right Marker (Bad Cast)
+
+	context.strokeStyle = "red";
+
+	context.beginPath();
+	context.moveTo(barX + barWidth - 30, barY);
+	context.lineTo(barX + barWidth - 30, barY + barHeight);
+	context.stroke();
 }
