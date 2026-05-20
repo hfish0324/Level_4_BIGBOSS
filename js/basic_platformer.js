@@ -91,7 +91,28 @@ function animate()
 	context.fillStyle = "#99ddff";
 	context.fillRect(0,0,canvas.width, canvas.height);
 
-	// Casting Power
+	// Game Reset (R Key)
+
+	if(r)
+	{
+		lineCast = false;
+
+		hook.x = player.x;
+		hook.y = player.y;
+
+		hook.vx = 0;
+		hook.vy = 0;
+
+		castPower = 0;
+
+		for(let i = 0; i < fish.length; i++)
+		{
+			fish[i].caught = false;
+			fish[i].y = canvas.height - 80;
+		}
+	}
+
+	// Cast Power
 
 	if(w && !lineCast)
 	{
@@ -104,7 +125,6 @@ function animate()
 	}
 
 	// Cast the line!
-
 	if(!w && castPower > 0 && !lineCast)
 	{
 		hook.x = player.x;
@@ -138,28 +158,24 @@ function animate()
 	}
 	else
 	{
-		//Hook follows player before cast
 		hook.x = player.x;
 		hook.y = player.y;
 	}
 
-	// Fish Movement + Cataching Mechanic
+	// Fish Movement + Catch
 
 	for(let i = 0; i < fish.length; i++)
 	{
-		//Fish movement
 		if(!fish[i].caught)
 		{
 			fish[i].x += Math.sin(Date.now()/500 + i) * .5;
 		}
 
-		//Catch detection
 		if(lineCast && !fish[i].caught && hook.hitTestObject(fish[i]))
 		{
 			fish[i].caught = true;
 		}
 
-		// Fish follows hook if caught
 		if(fish[i].caught)
 		{
 			fish[i].x = hook.x;
@@ -167,72 +183,63 @@ function animate()
 		}
 	}
 
-		// Reel in that fish!
+	// Reel in (S Key Fixed (hopefully))
 
-			if(s && lineCast)
+	if(s && lineCast)
+	{
+		var dx = player.x - hook.x;
+		var dy = player.y - hook.y;
+
+		var distance = Math.sqrt(dx * dx + dy * dy);
+
+		if(distance > 0)
+		{
+			dx /= distance;
+			dy /= distance;
+		}
+
+		var reelSpeed = 8;
+
+		hook.x += dx * reelSpeed;
+		hook.y += dy * reelSpeed;
+
+		hook.vx = 0;
+		hook.vy = 0;
+
+		for(let i = 0; i < fish.length; i++)
+		{
+			if(fish[i].caught)
 			{
-				//Direction back to player
+				fish[i].x = hook.x;
+				fish[i].y = hook.y - 20;
+			}
+		}
 
-				var dx = player.x - hook.x;
-				var dy = player.y - hook.y;
+		if(distance < 15)
+		{
+			lineCast = false;
 
-				//Distance to player
-				var distance = Math.sqrt(dx * dx + dy * dy);
+			hook.x = player.x;
+			hook.y = player.y;
 
-				//Normalize direction
-				if(distance > 0)
+			hook.vx = 0;
+			hook.vy = 0;
+
+			for(let i = 0; i < fish.length; i++)
+			{
+				if(fish[i].caught)
 				{
-					dx /= distance;
-					dy /= distance;
-				}
-
-				//Reel speed
-				var reelSpeed = 8;
-
-				hook.x += dx * reelSpeed;
-				hook.y += dy * reelSpeed;
-
-				//Stop physics while reeling
-				hook.vx = 0;
-				hook.vy = 0;
-
-				//Bring fish with hook
-				for(let i = 0; i < fish.length; i++)
-				{
-					if(fish[i].caught)
-					{
-						fish[i].x = hook.x;
-						fish[i].y = hook.y - 20;
-					}
-				}
-
-				//Hook returns to player
-				if(distance < 15)
-				{
-					lineCast = false;
-
-					hook.x = player.x;
-					hook.y = player.y;
-
-					hook.vx = 0;
-					hook.vy = 0;
-
-					//Successful fish catch
-					for(let i = 0; i < fish.length; i++)
-					{
-						if(fish[i].caught)
-						{
-							fish[i].y = 10000;
-						}
-					}
+					fish[i].y = 10000;
 				}
 			}
+		}
+	}
 
-	// Draw the Water
+	// Draw Water
 
 	water.drawRect();
 
-	// Draw the Fish
+	// Draw Fish
 
 	for(let i = 0; i < fish.length; i++)
 	{
@@ -243,11 +250,9 @@ function animate()
 	}
 
 	// Fishing Line
-
 	player.drawLine(hook);
 
 	// Draw Objects
-
 	player.drawRect();
 	hook.drawCircle();
 
@@ -258,29 +263,24 @@ function animate()
 
 	context.fillText("Hold W To Cast", 20, 30);
 	context.fillText("Hold S To Reel In", 20, 60);
-	context.fillText("Power: " + Math.round(castPower), 20, 90);
+	context.fillText("Hold R To Reset", 20, 90);
+	context.fillText("Power: " + Math.round(castPower), 20, 120);
 
-	// Power Bar
-
+	// Power Bar 
 	var barX = 20;
-	var barY = 110;
+	var barY = 140;
 	var barWidth = 220;
 	var barHeight = 20;
 
-	// Power Bar Background
-
 	context.fillStyle = "#444444";
 	context.fillRect(barX, barY, barWidth, barHeight);
-
-	// Power Fill
 
 	var fillWidth = (castPower / 20) * barWidth;
 
 	context.fillStyle = "#ffff66";
 	context.fillRect(barX, barY, fillWidth, barHeight);
 
-	// Left Marker (Bad Cast)
-
+	// Left red marker
 	context.strokeStyle = "red";
 	context.lineWidth = 3;
 
@@ -289,17 +289,15 @@ function animate()
 	context.lineTo(barX + 30, barY + barHeight);
 	context.stroke();
 
-	// Middle Marker (Best Cast)
-
+	// Middle green marker
 	context.strokeStyle = "lime";
 
 	context.beginPath();
-	context.moveTo(barX + (barWidth / 2), barY);
-	context.lineTo(barX + (barWidth / 2), barY + barHeight);
+	context.moveTo(barX + barWidth / 2, barY);
+	context.lineTo(barX + barWidth / 2, barY + barHeight);
 	context.stroke();
 
-	// Right Marker (Bad Cast)
-
+	// Right red marker
 	context.strokeStyle = "red";
 
 	context.beginPath();
