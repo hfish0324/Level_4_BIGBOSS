@@ -34,6 +34,9 @@ var fightingFish = null;
 
 var score = 0;
 
+var victory = false;
+var fishCaught = 0;
+
 canvas = document.getElementById("canvas");
 context = canvas.getContext("2d");
 
@@ -130,6 +133,9 @@ function animate()
 		fightingFish = null;
 
 		score = 0;
+
+		victory = false;
+		fishCaught = 0;
 
 		for(let i = 0; i < fish.length; i++)
 		{
@@ -389,6 +395,13 @@ function animate()
 				{
 					score += fish[i].strength * 10;
 					fish[i].y = 10000;
+
+					fishCaught++;
+
+					if(fishCaught >= 3)
+					{
+						victory = true;
+					}
 				}
 			}
 
@@ -468,4 +481,33 @@ function animate()
 	else context.fillStyle = "red";
 
 	context.fillRect(20, 260, tensionWidth, 20);
+
+	// Victory Screen
+	if(victory)
+	{
+		context.fillStyle = "rgba(0,0,0,.7)";
+		context.fillRect(0, 0, canvas.width, canvas.height);
+
+		context.fillStyle = "white";
+		context.font = "60px Arial";
+		context.textAlign = "center";
+
+		context.fillText("YOU WIN!", canvas.width / 2, canvas.height / 2);
+
+		context.font = "30px Arial";
+		context.fillText(
+			"You caught all 3 fish!",
+			canvas.width / 2,
+			canvas.height / 2 + 50
+		);
+
+		context.font = "24px Arial";
+		context.fillText(
+			"Hold R To Play Again",
+			canvas.width / 2,
+			canvas.height / 2 + 100
+		);
+
+		context.textAlign = "left";
+	}
 }
